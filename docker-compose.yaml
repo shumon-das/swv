@@ -1,0 +1,50 @@
+version: '3.7'
+services:
+  db:
+    container_name: db
+    image: mariadb:10.3
+    restart: "no"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - 3309:3306
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin
+    restart: "no"
+    ports:
+      - 19000:80
+    environment:
+      - PMA_ARBITRARY=1
+
+  nginx:
+    container_name: nginx
+    image: nginx:stable-alpine
+    ports:
+      - 8082:80
+    volumes:
+      - .:/var/www/symfonywithvue
+      - ./backend/docker/nginx/:/etc/nginx/conf.d/
+    depends_on:
+      - db
+
+  php:
+    container_name: php
+    build:
+      context: backend/docker/php
+    volumes:
+      - .:/var/www/symfonywithvue
+    ports:
+      - 18000:9000
+
+  vue:
+    build:
+      context: .
+      dockerfile: frontend/docker/Dockerfile
+    image: vueapp:0.0.2
+    container_name: "vue"
+    volumes:
+      - ./frontend/:/var/www/symfonywithvue
+    ports:
+      - "8083:3000"
